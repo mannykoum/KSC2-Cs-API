@@ -12,8 +12,10 @@ namespace KSCTester
 
             KSC2.KSC2 k = new KSC2.KSC2();
             string port = k.COM;
+            string sn = k.SN;
             // Keep the console window open in debug mode.
             Console.WriteLine("Port {0}", port);
+            Console.WriteLine("Serial num {0}", sn);
             // Console.ReadKey();
         }
     }

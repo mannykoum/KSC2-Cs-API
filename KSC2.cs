@@ -1,3 +1,8 @@
+/** Class for the KSC2
+ * Standalone class. Includes API and error handling.
+ * @author: Emmanuel Koumandakis (emmanuel@kulite.com)
+ */
+
 using System;
 using System.IO.Ports;
 
@@ -7,7 +12,7 @@ namespace KSC2
     public class KSC2
     {
         public SerialPort ComPort;
-        private long _SN;
+        private long SN;
         public string COM;
 
 
@@ -29,9 +34,28 @@ namespace KSC2
             ComPort.DataBits = 8;
             ComPort.StopBits = StopBits.One;
 
+            ComPort.Open();
+            // Retrieve serial number
+            ComPort.WriteLine("SN?");
+            SN = ComPort.ReadLine();
 
         } 
 
+        /* Destructor */
+        ~KSC2() 
+        {
+            ComPort.Close();
+        }
+        /* Methods to set attributes/settings */
+
+        /* The most general set function 
+         * params: 
+         */
+        
+
+        /* Helper functions */
+
+        /* function to automatically find the COM port */
         public static string findSerial()
         {
             string[] ports = SerialPort.GetPortNames();
