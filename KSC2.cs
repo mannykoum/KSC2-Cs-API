@@ -5,22 +5,26 @@
 
 using System;
 using System.IO.Ports;
-
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace KSC2
 {
     public class KSC2
     {
         public SerialPort ComPort;
-        private long SN;
+        public string SN;
         public string COM;
-
+        public string[] Valids = new string[] { "SN", "COUPLING", "SHIELD", 
+                                "MODE", "FILTER", "FC", "POSTGAIN", "PREGAIN",
+                                "EXC", "EXCTYPE", "SENSE", "COMPFILT",
+                                "COMPFILTFC", "COMPFILTQ", "INOVLD", "OUTOVLD",
+                                "OUTOVLDLIM"};
+        public string save = "SAVE";
 
         
         /* Constructors */
-        public KSC2() : this(findSerial())
-        {
-        }
+        public KSC2() : this(findSerial()) {}
         public KSC2(string com)
         {
             COM = com;
@@ -46,13 +50,66 @@ namespace KSC2
         {
             ComPort.Close();
         }
+
         /* Methods to set attributes/settings */
 
-        /* The most general set function 
-         * params: 
+        /* general set method to set the KSC2 
+         * individual settings on a channel
+         * returns true on success, false on com error 
          */
-        
+        public bool set(int channel, string cmd, string param)
+        {
+            string verify = "";
+            string chan = channel.ToString();
+            cmd = cmd.ToUpper();
+            param = param.ToUpper();
+            if (Valids.Contains(cmd) && channel>0 && channel<3)
+            {
+                ComPort.WriteLine(String.Format(
+                    "{0}:{1} = {2}", channel.ToString(), cmd, param));
+                verify = ComPort.ReadLine();
+                verify = Regex.Replace(verify, @"\s",""); // clean buffer junk
+            } else {
+                error("Incorrect usage of set().");
+            }
+            return (param == verify);
+        }
 
+        /* same as set for both channels */
+        public bool set(string cmd, string param) 
+        {
+            if (set(1, cmd, param) && set(2, cmd, param))
+                return true;
+            return false;
+        }
+
+        /* configure method 
+         * params: 
+         * returns true on success
+         */
+        public void configure(int channel, string coupling, string mode)
+        {
+            coupling = coupling.ToUpper();
+            mode = mode.ToUpper();
+            string chan = channel.ToString();
+
+            return;
+        }
+
+        /* Methods to get attributes/settings */
+        public string get(int channel, string cmd) 
+        {
+            cmd = cmd.ToUpper();
+            if (Valids.Contains(cmd) && channel>0 && channel<3)
+            {
+                ComPort.WriteLine(
+                    String.Format("{0}:{1}?", channel.ToString(), cmd));
+                return ComPort.ReadLine();
+            } else {
+                error("Incorrect usage of get().");
+                return "";
+            }
+        }
         /* Helper functions */
 
         /* function to automatically find the COM port */
@@ -61,10 +118,16 @@ namespace KSC2
             string[] ports = SerialPort.GetPortNames();
             if (ports.Length == 0)
             {
-                Console.Error.WriteLine("Error in findSerial()");
+                error("Error in findSerial()");
                 return "";
             }
             return ports[0];
+        }
+
+        /* print error function */
+        public static void error(string err)
+        {
+            Console.Error.WriteLine(err);
         }
     }
 }

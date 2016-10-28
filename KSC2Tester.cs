@@ -16,6 +16,14 @@ namespace KSCTester
             // Keep the console window open in debug mode.
             Console.WriteLine("Port {0}", port);
             Console.WriteLine("Serial num {0}", sn);
+            Console.WriteLine(k.set("coupling", "ac"));
+            Console.WriteLine(k.get(1, "coupling"));            
+            Console.WriteLine(k.get(2, "coupling"));
+            Console.WriteLine(k.set("coupling", "dc"));
+            Console.WriteLine(k.get(1, "coupling"));            
+            Console.WriteLine(k.get(2, "coupling"));
+            Console.WriteLine(k.get(2, "Shield"));
+
             // Console.ReadKey();
         }
     }
