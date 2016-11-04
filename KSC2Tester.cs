@@ -25,6 +25,7 @@ namespace KSCTester
             //Console.WriteLine(k.get(2, "Shield"));
 
             k.configure(2, "ac", "Ground", "operate");
+            k.filter(1, 111111, "FLAT");
             k.printAll();
             // Console.ReadKey();
         }

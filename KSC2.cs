@@ -109,17 +109,37 @@ namespace KSC2
         }
         public void configure(string coupling, string shield, string mode)
         {
-            if (!set("COUPLING", coupling))
-                error("COMMUNICATION ERROR: COUPLING NOT VERIFIED");
-            if (!set("SHIELD", shield))
-                error("COMMUNICATION ERROR: SHIELD NOT VERIFIED");
-            if (!set("MODE", mode))
-                error("COMMUNICATION ERROR: MODE NOT VERIFIED");
-
+            configure(1, coupling, shield, mode);
+            configure(2, coupling, shield, mode);
+            
             return;
         }
 
-        
+        public void filter(int channel, int freq_cut, string type)
+        {
+            // Rounding to the nearest multiple of 500 Hz
+            decimal intrmd = Convert.ToDecimal(freq_cut)/500;
+            freq_cut = (int) Math.Round(intrmd, MidpointRounding.AwayFromZero);
+            freq_cut *= 500;
+            if (freq_cut < 500)
+                freq_cut = 500;
+            Console.WriteLine("Cutoff frequency rounded to {0} Hz", freq_cut);
+            if (!set(channel, "FC", freq_cut.ToString()))
+                error("COMMUNICATION ERROR: FC NOT VERIFIED");
+            if (!set(channel, "FILTER", type))
+                error("COMMUNICATION ERROR: FILTER NOT VERIFIED");
+
+            return;  
+        }
+        public void filter(int freq_cut, string type)
+        {
+            filter(1, freq_cut, type);
+            filter(2, freq_cut, type);
+
+            return;  
+        }
+
+
 
         /* Methods to get attributes/settings */
         public string get(int channel, string cmd) 
@@ -153,7 +173,6 @@ namespace KSC2
             str += String.Format("{0,10}: {1,-10}, {2,-10}\n",
                       "Channel", 1, 2);
             str += "----------------------------------\n";
-
             foreach (string cmd in Valids)
             {
                 arr = get(cmd);
