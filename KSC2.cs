@@ -12,7 +12,7 @@ namespace KSC2
 {
     public class KSC2
     {
-        public SerialPort ComPort;
+        private SerialPort ComPort;
         public string SN;
         public string COM;
         public string[] Valids = new string[] { "SN", "COUPLING", "SHIELD", 
@@ -69,6 +69,11 @@ namespace KSC2
                     "{0}:{1} = {2}", channel.ToString(), cmd, param));
                 verify = ComPort.ReadLine();
                 verify = Regex.Replace(verify, @"\s",""); // clean buffer junk
+            } else if (cmd == save) {
+                ComPort.WriteLine(cmd);
+                verify = ComPort.ReadLine();
+                verify = Regex.Replace(verify, @"\s",""); // clean buffer junk
+                return (verify == "DONE");
             } else {
                 error("Incorrect usage of set().");
             }
@@ -84,18 +89,35 @@ namespace KSC2
         }
 
         /* configure method 
-         * params: 
+         * params:  int channel: optional (absence will set both channels)
+         *          string coupling
+         *          string shield
+         *          string mode
          * returns true on success
          */
-        public void configure(int channel, string coupling, string mode)
+        public void configure(
+            int channel, string coupling, string shield, string mode)
         {
-            coupling = coupling.ToUpper();
-            mode = mode.ToUpper();
-            string chan = channel.ToString();
+            if (!set(channel, "COUPLING", coupling))
+                error("COMMUNICATION ERROR: COUPLING NOT VERIFIED");
+            if (!set(channel, "SHIELD", shield))
+                error("COMMUNICATION ERROR: SHIELD NOT VERIFIED");
+            if (!set(channel, "MODE", mode))
+                error("COMMUNICATION ERROR: MODE NOT VERIFIED");
 
             return;
         }
+        public void configure(string coupling, string shield, string mode)
+        {
+            if (!set("COUPLING", coupling))
+                error("COMMUNICATION ERROR: COUPLING NOT VERIFIED");
+            if (!set("SHIELD", shield))
+                error("COMMUNICATION ERROR: SHIELD NOT VERIFIED");
+            if (!set("MODE", mode))
+                error("COMMUNICATION ERROR: MODE NOT VERIFIED");
 
+            return;
+        }
         /* Methods to get attributes/settings */
         public string get(int channel, string cmd) 
         {
@@ -110,6 +132,14 @@ namespace KSC2
                 return "";
             }
         }
+        public string[] get(string cmd)
+        {
+            string[] ans = new string[2];
+            ans[0] = get(1, cmd);
+            ans[1] = get(2, cmd);
+            return ans;
+        }
+
         /* Helper functions */
 
         /* function to automatically find the COM port */
