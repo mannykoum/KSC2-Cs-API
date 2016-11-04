@@ -24,13 +24,8 @@ namespace KSCTester
             //Console.WriteLine(k.get(2, "coupling"));
             //Console.WriteLine(k.get(2, "Shield"));
 
-            k.configure("ac", "Ground", "operate");
-            Console.WriteLine(k.get(1, "coupling"));
-            Console.WriteLine(k.get(2, "coupling"));
-            Console.WriteLine(k.get(1, "shield"));
-            Console.WriteLine(k.get(2, "shield"));
-            Console.WriteLine(k.get(1, "mode"));
-            Console.WriteLine(k.get(2, "mode"));
+            k.configure(2, "ac", "Ground", "operate");
+            k.printAll();
             // Console.ReadKey();
         }
     }

@@ -118,6 +118,9 @@ namespace KSC2
 
             return;
         }
+
+        
+
         /* Methods to get attributes/settings */
         public string get(int channel, string cmd) 
         {
@@ -136,10 +139,29 @@ namespace KSC2
         {
             string[] ans = new string[2];
             ans[0] = get(1, cmd);
+            ans[0] = Regex.Replace(ans[0], @"\s","");
             ans[1] = get(2, cmd);
+            ans[1] = Regex.Replace(ans[1], @"\s","");
             return ans;
         }
 
+        /* function to query and print all the settings */
+        public void printAll()
+        {
+            string[] arr;
+            string str = "\t KSC-2 settings\n";
+            str += String.Format("{0,10}: {1,-10}, {2,-10}\n",
+                      "Channel", 1, 2);
+            str += "----------------------------------\n";
+
+            foreach (string cmd in Valids)
+            {
+                arr = get(cmd);
+                str += String.Format("{0,10}: {1,-10}, {2,-10}\n",
+                      cmd, arr[0], arr[1]);
+            }
+            Console.WriteLine(str);
+        }
         /* Helper functions */
 
         /* function to automatically find the COM port */
