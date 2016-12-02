@@ -115,11 +115,12 @@ namespace KSC2
             return;
         }
 
+        /* filter */
         public void filter(int channel, int freq_cut, string type)
         {
             // Rounding to the nearest multiple of 500 Hz
             decimal intrmd = Convert.ToDecimal(freq_cut)/500;
-            freq_cut = (int) Math.Round(intrmd, MidpointRounding.AwayFromZero);
+            freq_cut = (int)Math.Round(intrmd, MidpointRounding.AwayFromZero);
             freq_cut *= 500;
             if (freq_cut < 500)
                 freq_cut = 500;
@@ -139,7 +140,101 @@ namespace KSC2
             return;  
         }
 
+        /* excitation */
+        public void excitation
+        (int channel, double voltage, string type, string sense)
+        {
+            type = type.ToUpper();
+            sense = sense.ToUpper();
 
+            decimal intrmd = Convert.ToDecimal(voltage/0.00125);
+            voltage = (double)Math.Round(intrmd,MidpointRounding.AwayFromZero);
+            voltage *= 0.00125; 
+            Console.WriteLine("Excitation voltage rounded to {0} V", voltage);
+            if (!set(channel, "EXC", voltage.ToString()))
+                error("COMMUNICATION ERROR: EXC NOT VERIFIED");
+            if (!set(channel, "EXCTYPE", type))
+                error("COMMUNICATION ERROR: EXCTYPE NOT VERIFIED");
+            if (!set(channel, "SENSE", sense))
+                error("COMMUNICATION ERROR: SENSE NOT VERIFIED");
+            
+            return;
+        }
+        public void excitation(double voltage, string type, string sense)
+        {
+            excitation(1, voltage, type, sense);
+            excitation(2, voltage, type, sense);
+
+            return;  
+        }
+
+        /* cavity compensation */
+        public void cavityComp(int channel, string onoff, params int[] argv)
+        {
+            if (argv.Length > 2) {
+                error("Too many arguments.");
+                return;
+            }
+            onoff = onoff.ToUpper();
+
+            if (onoff == "ON") {
+                int compfilt_fc = argv[0];
+                int compfilt_q = argv[1];
+
+                if (!set(channel, "COMPFILT", onoff))
+                    error("COMMUNICATION ERROR: COMPFILT NOT VERIFIED");
+                if (!set(channel, "COMPFILTFC", compfilt_fc.ToString()))
+                    error("COMMUNICATION ERROR: COMPFILTFC NOT VERIFIED");
+                if (!set(channel, "COMPFILTQ", compfilt_q.ToString()))
+                    error("COMMUNICATION ERROR: COMPFILTQ NOT VERIFIED");
+            } else if (onoff == "OFF") {
+                if (!set(channel, "COMPFILT", onoff))
+                    error("COMMUNICATION ERROR: COMPFILT NOT VERIFIED");                
+            } else {
+                error("Incorrect usage of cavityComp().");
+            }
+
+            return;
+        }
+        public void cavityComp(string onoff, params int[] argv)
+        {
+            cavityComp(1, onoff, argv);
+            cavityComp(2, onoff, argv);
+        }
+
+        /* 
+         * pregain 
+         * set the pregain (automatically sets any number to the closest
+         * power of 2)
+         * params: 
+         * channel: channel to be modified (both if omitted)
+         * gain: the value for the pregain (max 128)
+         */
+        public void pregain(int channel, int gain)
+        {
+            int hi = (int) Math.Pow(2, (Math.Ceiling(Math.Log(gain, 2)))); 
+            // there is a faster way using bitwise OR
+            int lo = hi/2;
+
+            if (Math.Abs(hi-gain) <= Math.Abs(lo-gain)) {
+                gain = hi;
+            } else {
+                gain = lo;
+            }
+
+            if (gain > 128)
+                gain = 128;
+
+            if (!set(channel, "PREGAIN", gain.ToString()))
+                error("COMMUNICATION ERROR: PREGAIN NOT VERIFIED");
+            
+            return;
+        }
+        public void pregain(int gain)
+        {
+            pregain(1, gain);
+            pregain(2, gain);
+        }
 
         /* Methods to get attributes/settings */
         public string get(int channel, string cmd) 
@@ -181,6 +276,7 @@ namespace KSC2
             }
             Console.WriteLine(str);
         }
+
         /* Helper functions */
 
         /* function to automatically find the COM port */
