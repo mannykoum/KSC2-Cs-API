@@ -235,6 +235,33 @@ namespace KSC2
             pregain(1, gain);
             pregain(2, gain);
         }
+        
+        /* 
+         * postgain 
+         * set the postgain 
+         * params: 
+         * channel: channel to be modified (both if omitted)
+         * gain: the value for the postgain (max 16)
+         */
+        public void pregain(int channel, double gain)
+        {
+            decimal intrmd = Convert.ToDecimal(gain/0.0125);
+            gain = (double)Math.Round(intrmd,MidpointRounding.AwayFromZero);
+            gain *= 0.0125; 
+
+            if (gain > 16)
+                gain = 16;
+
+            if (!set(channel, "POSTGAIN", gain.ToString()))
+                error("COMMUNICATION ERROR: POSTGAIN NOT VERIFIED");
+            
+            return;
+        }
+        public void postgain(double gain)
+        {
+            postgain(1, gain);
+            postgain(2, gain);
+        }
 
         /* Methods to get attributes/settings */
         public string get(int channel, string cmd) 
@@ -275,6 +302,20 @@ namespace KSC2
                       cmd, arr[0], arr[1]);
             }
             Console.WriteLine(str);
+        }
+
+        /* function to query and get all the settings */
+        public string[][] getAll()
+        {
+            string[][] arr;
+            int i = 0;
+            foreach (string cmd in Valids)
+            {
+                arr[i][0] = cmd;
+                arr[i][1] = get(1, cmd);
+                arr[i][2] = get(2, cmd);
+            }
+            return arr;
         }
 
         /* Helper functions */
