@@ -79,7 +79,6 @@ namespace KSC2
             }
             return (param == verify);
         }
-
         /* same as set for both channels */
         public bool set(string cmd, string param) 
         {
@@ -95,8 +94,8 @@ namespace KSC2
          *          string mode
          * returns true on success
          */
-        public void configure(
-            int channel, string coupling, string shield, string mode)
+        public void configure
+        (int channel, string coupling, string shield, string mode)
         {
             if (!set(channel, "COUPLING", coupling))
                 error("COMMUNICATION ERROR: COUPLING NOT VERIFIED");
@@ -168,7 +167,15 @@ namespace KSC2
             return;  
         }
 
-        /* cavity compensation */
+        /*
+         * cavity compensation 
+         * params:
+         * channel
+         * string onoff: accepted values are "ON" or "OFF"
+         * argv: variable args
+         * these are 2: int compfilt_fc, int compfiltq 
+         * they are only valid when switching the REZCOMP on
+         */
         public void cavityComp(int channel, string onoff, params int[] argv)
         {
             if (argv.Length > 2) {
@@ -263,6 +270,7 @@ namespace KSC2
             postgain(2, gain);
         }
 
+        /* method to set the overload limit on the output */
         public void setOvldLim(int channel, double limit)
         {
             decimal intrmd = Convert.ToDecimal(limit/0.1);
@@ -316,6 +324,7 @@ namespace KSC2
             return ans;
         }
 
+        /* method to get the value for in/out overload on a channel */
         public string ovldUpdate(int channel, bool in_or_not_out)
         {
             string cmd;
