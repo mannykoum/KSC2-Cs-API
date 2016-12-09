@@ -20,7 +20,7 @@ namespace KSC2
                                 "EXC", "EXCTYPE", "SENSE", "COMPFILT",
                                 "COMPFILTFC", "COMPFILTQ", "INOVLD", "OUTOVLD",
                                 "OUTOVLDLIM"};
-        public string save = "SAVE";
+        public string Save = "SAVE";
 
         
         /* Constructors */
@@ -69,7 +69,7 @@ namespace KSC2
                     "{0}:{1} = {2}", channel.ToString(), cmd, param));
                 verify = ComPort.ReadLine();
                 verify = Regex.Replace(verify, @"\s",""); // clean buffer junk
-            } else if (cmd == save) {
+            } else if (cmd == Save) {
                 ComPort.WriteLine(cmd);
                 verify = ComPort.ReadLine();
                 verify = Regex.Replace(verify, @"\s",""); // clean buffer junk
@@ -243,7 +243,7 @@ namespace KSC2
          * channel: channel to be modified (both if omitted)
          * gain: the value for the postgain (max 16)
          */
-        public void pregain(int channel, double gain)
+        public void postgain(int channel, double gain)
         {
             decimal intrmd = Convert.ToDecimal(gain/0.0125);
             gain = (double)Math.Round(intrmd,MidpointRounding.AwayFromZero);
@@ -261,6 +261,35 @@ namespace KSC2
         {
             postgain(1, gain);
             postgain(2, gain);
+        }
+
+        public void setOvldLim(int channel, double limit)
+        {
+            decimal intrmd = Convert.ToDecimal(limit/0.1);
+            limit = (double)Math.Round(intrmd,MidpointRounding.AwayFromZero);
+            limit *= 0.1;
+
+            if (limit > 10.2) {
+                limit = 10.2;
+            } else if (limit < 0.1) {
+                limit = 0.1;
+            }
+
+            if (!set(channel, "OUTOVLDLIM", limit.ToString()))
+                error("COMMUNICATION ERROR: OUTOVLDLIM NOT VERIFIED");
+
+            return;
+        }
+        public void setOvldLim(double limit)
+        {
+            setOvldLim(1, limit);
+            setOvldLim(2, limit);
+        }
+
+        /* Save the current configuration */
+        public void save()
+        {
+            set(0, "SAVE", "");
         }
 
         /* Methods to get attributes/settings */
@@ -287,6 +316,39 @@ namespace KSC2
             return ans;
         }
 
+        public string ovldUpdate(int channel, bool in_or_not_out)
+        {
+            string cmd;
+            if (in_or_not_out) {
+                cmd = "INOVLD";
+            } else {
+                cmd = "OUTOVLD";
+            }
+            return get(channel, cmd);
+        }
+        public string ovldInUpdate(int channel)
+        {
+            return ovldUpdate(channel, true);
+        }
+        public string ovldOutUpdate(int channel)
+        {
+            return ovldUpdate(channel, false);
+        }
+        /* 
+         * accessor method for all overload values
+         * returns array of strings with the following order
+         * [ovldIn chan 1, ovldIn chan 2, ovldOut chan 1, ovldOut chan 2]
+         */
+        public string[] getAllOvld()
+        {
+            string[] arr = new string[4];
+            arr[0] = ovldInUpdate(1);
+            arr[1] = ovldInUpdate(2);
+            arr[2] = ovldOutUpdate(1);
+            arr[3] = ovldOutUpdate(2);
+            return arr;
+        }
+
         /* function to query and print all the settings */
         public void printAll()
         {
@@ -305,15 +367,16 @@ namespace KSC2
         }
 
         /* function to query and get all the settings */
-        public string[][] getAll()
+        public string[,] getAll()
         {
-            string[][] arr;
+            string[,] arr = new string[Valids.Length,3];
             int i = 0;
             foreach (string cmd in Valids)
             {
-                arr[i][0] = cmd;
-                arr[i][1] = get(1, cmd);
-                arr[i][2] = get(2, cmd);
+                arr[i,0] = cmd;
+                arr[i,1] = get(1, cmd);
+                arr[i,2] = get(2, cmd);
+                i++;
             }
             return arr;
         }
